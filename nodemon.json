@@ -1,0 +1,13 @@
+{
+    "verbose": false,
+    "execMap": {
+        "js": "ts-node hello.ts"
+    },
+    "watch": [
+        "hello.ts",
+        "util/",
+        "controller/",
+        "middleware/"
+    ],
+    "ext": "ts,json"
+}
