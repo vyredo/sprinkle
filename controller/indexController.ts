@@ -17,16 +17,14 @@ router
         valid: true
     })
     .Apply((RESULT, req, res ) => {
-        console.log(' EXECUTING APPLY')
-        console.log(RESULT);
         res.end('hello')
     })
 
 router
     .get("/hello")
-    // .QueryString('test', Joi.string())
+    .QueryString('test', Joi.string())
     .Apply((RESULtT, req, res) => {
-        res.end('hello')
+        res.json({'hello': 'vidy'})
     })
 
 router
@@ -43,8 +41,6 @@ router
         valid: true
     })
     .Apply((RESULT, req, res ) => {
-        console.log(' EXECUTING APPLY')
-        console.log(RESULT);
         res.end('hello')
     })
 

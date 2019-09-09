@@ -1,9 +1,6 @@
 import { HttpResponse } from "uWebSockets.js";
 import { Stream } from "stream";
 import { ReadStream } from "fs";
-process.on('uncaughtException', function(err){
-  console.log(err)
-})
 
 let openStreams = 0;
 let streamIndex = 0;
@@ -56,7 +53,8 @@ export function pipeStreamOverResponse(res, readStream, totalSize) {
 
   }).on('error', () => {
     /* Todo: handle errors of the stream, probably good to simply close the response */
-    console.log('Unhandled read error from Node.js, you need to handle this!');
+    console.error('Unhandled read error from Node.js, you need to handle this!');
+    res.close();
   });
 
   /* If you plan to asyncronously respond later on, you MUST listen to onAborted BEFORE returning */
@@ -75,9 +73,9 @@ export function onAbortedOrFinishedResponse(res: HttpResponse, readStream: ReadS
   
 
     if (res.id == -1) {
-      console.log("ERROR! onAbortedOrFinishedResponse called twice for the same res!");
+      console.error("ERROR! onAbortedOrFinishedResponse called twice for the same res!");
     } else {
-      console.log('Stream was closed, openStreams: ' + --openStreams);
+      // console.log('Stream was closed, openStreams: ' + --openStreams);
       console.timeEnd(res.id);
     }
   

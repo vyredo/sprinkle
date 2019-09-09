@@ -1,7 +1,6 @@
 /* Non-SSL is simply App() */
 import * as uWS from 'uWebSockets.js';
 import { uApp } from './util/appwrapper';
-import { jsonParserP } from './middleware/jsonparser';
 import { MicroRequest } from './util/MicroRequest';
 import indexController from './controller/indexController'
 import { RequestMap } from './util/RequestMapper';
@@ -44,9 +43,19 @@ app
           listenSocket = null;
         }, 1000);
       }
-    
+      process.on('uncaughtException', function(err){
+        console.error(err);
+        setTimeout(() => {
+          console.log('Shutting down now');
+          uWS.us_listen_socket_close(listenSocket);
+          listenSocket = null;
+        }, 1000);
+      })
     } else {
       console.log('Failed to listen to port ' + port);
     }
 
   });
+
+  
+  

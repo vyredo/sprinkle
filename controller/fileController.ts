@@ -6,8 +6,6 @@ router
     .get('/login')
     .RequestParam('end', Joi.string())
     .Apply((RESULT, req, res ) => {
-        console.log(' EXECUTING APPLY')
-        console.log(RESULT);
         res.end('hello')
     })
 

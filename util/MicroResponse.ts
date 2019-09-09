@@ -19,7 +19,6 @@ export function extendResponse(res: HttpResponse){
         res.end(_json)
     }
     microResponse.end = (r?:RecognizedString) => {
-        console.log('ending')
         if (!res.aborted) {
             res.end(r);
         }

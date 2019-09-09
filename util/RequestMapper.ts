@@ -16,18 +16,21 @@ interface IRESULT {
     criteria: unknown;
 }
 
-class ValidatorOption {
-    '@sprinkle'?:SprinkleDocDescription;
-    required: boolean;
-    type: Function;
-    as?: string
+// class ValidatorOption {
+//     '@sprinkle'?:SprinkleDocDescription;
+//     required: boolean;
+//     type: Function;
+//     as?: string
+// }
+export interface IRoute {
+    get: any;
+    [key: string]: any;
 }
-
 export class RequestMap {
     isRequestMap = true;
-    _route: unknown;
+    _route: IRoute;
     _routeDocs:any[] = [];
-    constructor(route: unknown){ 
+    constructor(route: IRoute){ 
         this._route = route;
         this._routeDocs = [];
     }
@@ -73,7 +76,7 @@ export class RequestValidator {
     private _route: unknown;
     private _HttpMethod:string;
     private _HttpPathName:string;
-    private _authorizeOption:AuthorizeOption;
+    private _authorizeOption:AuthorizeOption | null = null;
     //@ts-ignore
     private _queryString:Object = {};
     //@ts-ignore
@@ -86,12 +89,12 @@ export class RequestValidator {
     }
     private _responseBody?:any = {}; // {valid:boolean, 200: schemaObject}
     private _prefixError = () => `Error on ${this._HttpMethod.toUpperCase()}, ${this._HttpPathName}. Reason: `;
-    private _executeAuthorize(req):boolean{
+    private _executeAuthorize(req: MicroRequest):boolean{
         if(!this._authorizeOption) return true;
 
         let {validator, type} = this._authorizeOption;
             type = type ? type.trim() : 'Basic'
-        const authorizeToken = req.headers.authorization;
+        const authorizeToken = req.headers ? req.headers.authorization : null;
         if(!authorizeToken) return false;
         const tokenType = type[0].toUpperCase() + type.slice(1) + ' ';
         
@@ -324,7 +327,6 @@ export class RequestValidator {
                     criteria: requestCriteriaResult.result
                 } as IRESULT;  
 
-                console.log('RESULT',RESULT)
                 //@ts-ignore          
                 res.json = function (obj) {
                     //@ts-ignore
@@ -341,7 +343,13 @@ export class RequestValidator {
                     
                     }
                     //no need to validate
-                    return res.json(obj)
+                    try {
+                        const objString = JSON.stringify(obj);
+                        return res.end(objString)
+                    } catch(e){
+                        console.error(e)
+                        res.writeStatus("500").end();
+                    }
                 };
                 
                 callback(RESULT as IRESULT, req, res);

@@ -1,22 +1,27 @@
 import { HttpRequest, RecognizedString, HttpResponse } from "uWebSockets.js";
 import { Buffer } from "buffer";
+import { MicroResponse } from "./MicroResponse";
+
+export interface MicroRequestHeaders {
+    authorization: string;
+}
 
 export interface MicroRequest extends HttpRequest {
     url: string;
     body: null | Object;
-    headers: null | Object;
+    headers: null | MicroRequestHeaders;
     query: string;
 }
 
 
-export function extendRequestP(req: HttpRequest, res: HttpResponse): Promise<MicroRequest>{
+export function extendRequestP(req: MicroRequest, res: MicroResponse): Promise<MicroRequest>{
     
     // parse json from middleware not from here;
     // can parse gRPC from middleware also;
     return new Promise(resolve => {
         // @ts-ignore
         req.url = req.getUrl();
-        readJson(res, req, (err) => {
+        readJson(res, req, (err:any) => {
             console.error(err)
         })
         .then(newReq => {
@@ -27,9 +32,9 @@ export function extendRequestP(req: HttpRequest, res: HttpResponse): Promise<Mic
 }
 
 /* Helper function for reading a posted JSON body */
-function readJson(res, req, err) {
+function readJson(res:MicroResponse, req: MicroRequest, err:(e: any) => void) {
     return new Promise((resolve) => {
-        let buffer;
+        let buffer: Buffer;
         /* Register data cb */
         res.onData((ab, isLast) => {
             let chunk = Buffer.from(ab);

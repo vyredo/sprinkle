@@ -6,6 +6,7 @@ import { IServerObject } from "./ServerObject";
 import { IInfoObject } from "./InfoObject";
 import { ISecurityRequirementObject } from "./SecurityRequirementObject";
 import { IPathItemObject } from "./PathItemObject";
+import { IComponentObject } from "./ComponentObject";
 
 // export type Type = 'params' | 'response' | 'body';
 interface ISwagger {
@@ -19,7 +20,7 @@ interface ISwagger {
     externalDocs?: IExternalDocumentationObject[]; // Additional external documentation.
 
     // below not yet
-    components:  unknown[]; //An element to hold various schemas for the specification.
+    components:  IComponentObject[]; //An element to hold various schemas for the specification.
     security: ISecurityRequirementObject[];
     paths: IPathItemObject[];   
 }
