@@ -4,8 +4,11 @@ import { uApp } from './util/appwrapper';
 import { MicroRequest } from './util/MicroRequest';
 import indexController from './controller/indexController'
 import { RequestMap } from './util/RequestMapper';
+const health = require('@cloudnative/health-connect');
+let healthcheck = new health.HealthChecker();
+
 const port = 9001;
-let listenSocket = null;
+let listenSocket:null | string = null;
 let shutdown = false;
 // require('uWebSockets.js').SSLApp({
 
@@ -21,14 +24,14 @@ const _app = uWS.App({
   passphrase: '1234'
 })
 const app = uApp(_app);
-const router = new RequestMap({})
+const router = new RequestMap()
 
 app
   .static(__dirname+'/assets', {
     maxCache: 1000
   })
   .use('/', indexController)
-  .listen(port, (token) => {
+  .listen(port, (token:string) => {
     /* Save the listen socket for later shut down */
     listenSocket = token;
     /* Did we even manage to listen? */
@@ -39,16 +42,20 @@ app
       if(shutdown){
         setTimeout(() => {
           console.log('Shutting down now');
-          uWS.us_listen_socket_close(listenSocket);
-          listenSocket = null;
+          if(listenSocket){
+            uWS.us_listen_socket_close(listenSocket);
+            listenSocket = null;
+          }
         }, 1000);
       }
       process.on('uncaughtException', function(err){
         console.error(err);
         setTimeout(() => {
           console.log('Shutting down now');
-          uWS.us_listen_socket_close(listenSocket);
-          listenSocket = null;
+          if(listenSocket){
+            uWS.us_listen_socket_close(listenSocket);
+            listenSocket = null;
+          }
         }, 1000);
       })
     } else {

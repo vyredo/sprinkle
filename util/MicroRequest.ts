@@ -3,7 +3,7 @@ import { Buffer } from "buffer";
 import { MicroResponse } from "./MicroResponse";
 
 export interface MicroRequestHeaders {
-    authorization: string;
+    authorization?: string;
 }
 
 export interface MicroRequest extends HttpRequest {

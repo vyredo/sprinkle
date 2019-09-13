@@ -12,7 +12,7 @@ export interface URouter {
     connect?: ShadowMiddleware[];
     trace?: ShadowMiddleware[];
     ws?: ShadowMiddleware[];
+    head?: ShadowMiddleware[];
 }
-
 
 ['get' ,'post', 'options', 'del', 'patch', 'put', 'head',  'trace', 'any', 'connect', 'trace', 'ws']

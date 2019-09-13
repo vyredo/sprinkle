@@ -1,11 +1,11 @@
 import { RequestMap } from "../util/RequestMapper";
 import * as Joi from 'joi';
 
-const router = new RequestMap({})
+const router = new RequestMap()
 
 router
     .post('/login')
-    .RequestParam('end', Joi.string())
+    .QueryString('end', Joi.string())
     .RequestBody({
         schema: Joi.object().keys({
             username: Joi.string().alphanum().min(3).max(30).required(),
@@ -22,14 +22,14 @@ router
 
 router
     .get("/hello")
-    .QueryString('test', Joi.string())
+    .QueryString('test', Joi.string().required())
     .Apply((RESULtT, req, res) => {
-        res.json({'hello': 'vidy'})
+         res.json({'hello': 'vidy'})
     })
 
 router
     .get('/login')
-    .RequestParam('end', Joi.string())
+    .QueryString('end', Joi.string().required())
     .RequestBody({
         schema: Joi.object().keys({
             username: Joi.string().alphanum().min(3).max(30).required(),

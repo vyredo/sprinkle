@@ -8,7 +8,8 @@ export interface MicroResponse extends HttpResponse {
 
 
 export function extendResponse(res: HttpResponse){
-    const microResponse = { ...res }
+    let microResponse: any = {};
+    
     microResponse.isUWS = true;
     microResponse.status = (n:RecognizedString) => {
         return res.writeStatus(String(n))
@@ -18,11 +19,14 @@ export function extendResponse(res: HttpResponse){
         res.writeHeader('Content-Type', 'application/json');
         res.end(_json)
     }
-    microResponse.end = (r?:RecognizedString) => {
-        if (!res.aborted) {
-            res.end(r);
-        }
-        return res;
+    // microResponse.end = (r?:RecognizedString) => {
+    //     if (!res.aborted) {
+    //         res.end(r);
+    //     }
+    //     return res;
+    // }
+    for(let key in microResponse){
+        res[key] = microResponse[key]
     }
-    return microResponse as MicroResponse;
+    return res as MicroResponse;
 }

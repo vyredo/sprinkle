@@ -84,7 +84,7 @@ export function onAbortedOrFinishedResponse(res: HttpResponse, readStream: ReadS
 }
 
 export function streamToString (stream): Promise<string> {
-  const chunks = []
+  const chunks:Buffer[] = []
   return new Promise((resolve, reject) => {
     stream.on('data', chunk => chunks.push(chunk))
     stream.on('error', reject)
@@ -94,7 +94,7 @@ export function streamToString (stream): Promise<string> {
 
 
 export function streamToBuffer (stream): Promise<Buffer> {
-  const chunks = []
+  const chunks:Buffer[] = []
   return new Promise((resolve, reject) => {
     stream.on('data', chunk => chunks.push(chunk))
     stream.on('error', reject)

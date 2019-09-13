@@ -8,6 +8,7 @@ import { error } from "util";
 import * as Joi from 'joi'
 import { MicroResponse } from "./MicroResponse";
 import { MicroRequest } from "./MicroRequest";
+import { URouter } from "./uRouter";
 
 interface IRESULT {
     query: unknown;
@@ -28,10 +29,10 @@ export interface IRoute {
 }
 export class RequestMap {
     isRequestMap = true;
-    _route: IRoute;
+    _route: URouter;
     _routeDocs:any[] = [];
-    constructor(route: IRoute){ 
-        this._route = route;
+    constructor(route?: URouter){ 
+    this._route = {...route, isRouter:true};
         this._routeDocs = [];
     }
     get(pathname:string):RequestValidator{
@@ -68,19 +69,17 @@ declare class ExecutionResult {
 }
 
 export class RequestValidator {
-    constructor(_route: unknown = {}, _HttpMethod:string, pathname:string){
+    constructor(_route: URouter, _HttpMethod:string, pathname:string){
         this._route = _route;
         this._HttpMethod = _HttpMethod;
         this._HttpPathName = pathname;
     }
-    private _route: unknown;
+    private _route: URouter;
     private _HttpMethod:string;
     private _HttpPathName:string;
     private _authorizeOption:AuthorizeOption | null = null;
     //@ts-ignore
     private _queryString:Object = {};
-    //@ts-ignore
-    private _requestParams:Object = {};
     private _requestBody?: {
         schema: Joi.ObjectSchema, // ConstraintObject
     };
@@ -102,22 +101,22 @@ export class RequestValidator {
         
         return validator(authorizeToken.split(tokenType)[1]);
     }
-    private _executeRequestParam(req:MicroRequest):ExecutionResult {
+    private _executeQueryString(req:MicroRequest):ExecutionResult {
 
         let errorMessages: string[] = [];
         let result: Object = {};
         const queryString:string = req.query;
-        let objToValidate = {}
-        if(Object.keys(this._requestParams).length <= 0) return {errorMessages, isValid: true, result};
+        let objToValidate:any = {}
+        if(Object.keys(this._queryString).length <= 0) return {errorMessages, isValid: true, result};
         if(!queryString)  return {errorMessages: ['No Query String'], isValid:false, result} 
-        let schema:Joi.Schema = Joi.object().keys(this._requestParams as Joi.SchemaMap).unknown();
-
+        let schema:Joi.Schema = Joi.object().keys(this._queryString as Joi.SchemaMap).unknown();
         queryString.split('&').forEach(keyValue => {
             const [key, value] = keyValue.split('=');
             objToValidate[key] = value;
         });
-       
+
         const objError = Joi.validate(objToValidate, schema, {abortEarly: false});
+        console.log(objError)
         if(!objError.error){
             return {errorMessages, isValid: true,
                 result: objToValidate
@@ -211,7 +210,7 @@ export class RequestValidator {
             objToValidate[key] = value;
         });
        
-        let result = Joi.validate(objToValidate, schema, {abortEarly: false });
+        let result: Joi.ValidationResult<any> = Joi.validate(objToValidate, schema, {abortEarly: false });
         (result.error) && result.error.details.forEach((err:any) => {
             const message = err.message.split(" ").slice(1).join(" ");
             const pathname = err.path[0];
@@ -266,19 +265,19 @@ export class RequestValidator {
     RequestHeader(){
         return;
     }
-    RequestParam(queryvar:string | Joi.Schema, joiValidation?: Joi.Schema):RequestValidator{
+    QueryString(queryvar:string | Joi.Schema, joiValidation?: Joi.Schema):RequestValidator{
         if(typeof queryvar === 'object' && (queryvar as Joi.Schema).isJoi){
-            this._requestParams['any'] = (queryvar as Joi.Schema);
+            this._queryString['any'] = (queryvar as Joi.Schema);
             return this;
         }
 
-        this._requestParams[queryvar as string] = joiValidation;
+        this._queryString[queryvar as string] = joiValidation;
         return this;
     }
-    QueryString(pathvar:string, joiValidation?:Joi.Schema):RequestValidator {
-        this._queryString[pathvar] = joiValidation;
-        return this;
-    }
+    // QueryString(pathvar:string, joiValidation?:Joi.Schema):RequestValidator {
+    //     this._queryString[pathvar] = joiValidation;
+    //     return this;
+    // }
     ResponseBody(obj){
         if("valid" in obj && obj.valid && !obj[200]) throw new Error(this._prefixError() + 'Response need to be validated but no schema')
         if(obj) this._responseBody = obj;
@@ -298,16 +297,18 @@ export class RequestValidator {
                 let errorMessages:String[] = [];
                 const BAD_PATH_VARIABLE_STATUS = 400;
 
-                if(!parent._executeAuthorize(req)){
+                if(!parent._executeAuthorize(req) && parent._authorizeOption){
                     // if not authorized return 401
-                    return parent._returnResponse(res, parent._authorizeOption.responseStatus, parent._authorizeOption.responseMessage);
+                    return parent._returnResponse(res, 
+                        parent._authorizeOption.responseStatus, 
+                        parent._authorizeOption.responseMessage);
                 } 
 
-                const queryStringResult = parent._executePathVariable(req);
-                if(!queryStringResult.isValid) errorMessages = errorMessages.concat(queryStringResult.errorMessages);
+                const requestParamResult = parent._executePathVariable(req);
+                if(!requestParamResult.isValid) errorMessages = errorMessages.concat(requestParamResult.errorMessages);
 
-                const requestParamResult = parent._executeRequestParam(req);
-                if(!requestParamResult.isValid) errorMessages = errorMessages.concat(requestParamResult.errorMessages); 
+                const queryStringResult = parent._executeQueryString(req);
+                if(!queryStringResult.isValid) errorMessages = errorMessages.concat(queryStringResult.errorMessages); 
 
                 const requestBodyResult = parent._executeRequestBody(req);
                 if(!requestBodyResult.isValid) errorMessages = errorMessages.concat(requestBodyResult.errorMessages);
@@ -331,7 +332,7 @@ export class RequestValidator {
                 res.json = function (obj) {
                     //@ts-ignore
                     if(self._responseBody.valid){
-                        const statusCode = res.statusCode;
+                        const statusCode = res.statusCode || 200;
                         const { isValid, objError } = self._executeResponseBody(obj, statusCode);
                         if(isValid) {
                             return res.json(obj);

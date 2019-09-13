@@ -3,4 +3,5 @@ test
 yarn-error.log
 package-lock.json
 yarn.lock
+yarn-error.log
 assets
