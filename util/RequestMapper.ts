@@ -116,7 +116,6 @@ export class RequestValidator {
         });
 
         const objError = Joi.validate(objToValidate, schema, {abortEarly: false});
-        console.log(objError)
         if(!objError.error){
             return {errorMessages, isValid: true,
                 result: objToValidate

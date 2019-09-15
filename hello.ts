@@ -30,6 +30,9 @@ app
   .static(__dirname+'/assets', {
     maxCache: 1000
   })
+  .useExpress('/live', health.LivenessEndpoint(healthcheck))
+  .useExpress('/ready', health.ReadinessEndpoint(healthcheck))
+  .useExpress('/health', health.HealthEndpoint(healthcheck))
   .use('/', indexController)
   .listen(port, (token:string) => {
     /* Save the listen socket for later shut down */

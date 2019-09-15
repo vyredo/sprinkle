@@ -10,9 +10,10 @@ const fileType = require('file-type');
 
 type Callback = (res: HttpResponse, req: HttpRequest) => void;
 export type ShadowMiddleware = (req: MicroRequest, res: MicroResponse) => Promise<MicroRequest>;
+export type ExpressMiddleware = (req: HttpRequest, res: HttpResponse, next: Callback) => void;
 
 interface Wrap {
-    useExpress: (path: string, middleware: any) => Wrap;
+    useExpress: (path: string, middleware: ExpressMiddleware) => Wrap;
     use: (fnOrStr: string | ShadowMiddleware, router?: RequestMap ) => Wrap;
     listen(host: number | RecognizedString, cb: (listenSocket: us_listen_socket | any) => void):void;
     static(path:string, options: IStaticOption): Wrap;
@@ -104,21 +105,15 @@ export function uApp (app:TemplatedApp) : Wrap {
                     res.end(cache.file)
                 })
             });
-
             app.get('/ping', (res, req) => {
                 res.end('pong')
             })
-
             // for method like listen, it will executed directly without middleware
             if(typeof host === 'number'){
                 return app.listen(host as number, cb as any);
             } 
-
-
             // @ts-ignore host is now RecognizedString
             return app.listen(host, cb)
-
-
         },
        
     } as Wrap;
